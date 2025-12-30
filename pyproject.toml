@@ -10,4 +10,5 @@ dependencies = [
     "pyyaml>=6.0.3",
     "uvicorn>=0.40.0",
     "python-logging-loki>=0.3.1",
+    "prometheus-fastapi-instrumentator>=7.0.0",
 ]
