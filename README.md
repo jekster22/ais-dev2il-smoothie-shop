@@ -133,7 +133,7 @@ To view the metrics:
 1. Make sure that both services are reloaded and generate some traffic
 1. Open Prometheus at http://localhost:9090
 1. Try these queries and have a look at the table and graph results:
-   - Request rate per second: `rate(http_requests_total[1m])` -
+   - Request rate per minute: `rate(http_requests_total[1m])` -
    - Average request duration: `http_request_duration_seconds_sum / http_request_duration_seconds_count` 
    - Average request duration calls to `/prepare`: `http_request_duration_seconds_sum{handler="/prepare"} / http_request_duration_seconds_count{handler="/prepare"}`
    
@@ -304,25 +304,48 @@ use to search for all log outputs across services that belong to a specific HTTP
 1. Copy the trace id from the URL
 1. Go to Grafana and search for the label `trace_id` with the value you copied 
 
-### Further Readings and Exercises
+## Further Readings
 
-TODOs -
+Logging
+- https://docs.python.org/3/howto/logging.html
+- https://docs.python.org/3/library/logging.html
+- https://grafana.com/docs/loki/latest/query
 
-logging instrumentation
+Metrics
+- https://prometheus.io/docs/concepts/metric_types/
+- https://prometheus.io/docs/prometheus/latest/querying/basics/
+- https://prometheus.io/docs/alerting/latest/overview/
 
-merge into master
-configure loki to keep the logs in the project directory
-make sure that grafana keeps the logs
-open telemetry collector instead of sending to loki directly
-PromQL
-Metric types, e.g. counters, gauges, histograms, etc. 
-Volumes might cause problems with Windows. Needs to be investigated.
-OpenTelemetry Traces, Spans, etc.
+Tracing
+- https://opentelemetry.io/docs/concepts/
+- https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
 
-- Read through the [Python Logging HOWTO](https://docs.python.org/3/howto/logging.html)
-- https://docs.python.org/3/library/logging.html#
-- Introduce proper logging in the order service
-- Correlate log messages
-- Add a Grafana dashboard to monitor HTTP requests. Make sure that it's filterable by service
+## Excercises
 
-https://grafana.com/docs/loki/latest/query/
+### Logging
+
+Introduce logging and log meaningful messages in the order service. Choose logging levels that make sense for the messages. 
+
+Attach more information, such as the number of cooks and the number of busy cooks in the kitchen service log outputs. Use extra attributes with log messages, inspect the logs in loki and search for them (see e.g. here https://docs.python.org/3/library/logging.html#logging.Logger.debug).
+
+Change the log configuration to additionally log to file. Each log record should be a JSON object. 
+
+**Advanced**: Sending log messages directly to Loki is not very nice. If e.g. the network is down or your application crashes, 
+then logs are lost. Also if Loki is slow when accepting your logs, your application will be slow as well. The common best 
+practice is to either log to standard out or to a file and then have a separate process that reads the logs from 
+there and sends them to Loki. Use the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) to read the logs
+from the previously created log file and send them to Loki. 
+
+
+### Metrics
+
+Create a dashboard in Grafana that shows the number of smoothies ordered over time. Allows users to 
+filter per flavor. 
+
+Create a dashboard in Grafana that allows users to inspect HTTP calls. Display the request rate 
+and the average request duration. Also introduce metrics in the order service and allows users to 
+filter per HTTP path and service.
+
+**Advanced**: Create an alert that fires when the number of smoothies ordered per minute is 
+below 10. Inspect your alerts in the Prometheus UI. Use the Alertmanager to notify you via email 
+when this alert fires.
