@@ -84,7 +84,7 @@ and store it in the root directory of the project.
 and store it in the root directory of the project.
 - Start Grafana and Loki by running `docker-compose up -d`.
 - Stop the kitchen service and start it again using 
-`uv run uvicorn kitchen_service:app --port 8001 --reload --log-config logging_config.yaml`.
+`uv run uvicorn kitchen_service:app --port 8001 --reload --log-config logging_config_loki.yaml`.
 
 Your logs are now sent to Loki in addition to the console output. You can now use Grafana to explore the logs.
 1. Open Grafana at http://localhost:3000
@@ -271,6 +271,32 @@ These custom spans help you understand:
 To view traces:
 1. Make sure that both services are reloaded and generate some traffic
 1. Find traces in the Jager UI and inspect the span hierarchy
+
+## Correlating Logs and Traces
+
+You will get the most out of all this information if you can correlate different signals together. Poor man's 
+corellation can be done using timestamps, but this is not very useful if there are multiple requests going
+on at the same time. We will therefore now correlate logs and traces using trace IDs.
+
+Add the following code block to both, `order_service.py` and `kitchen_service.py`:
+```python
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+# Instrument logging to automatically inject trace context into all log records
+def log_hook(span, record):
+    if not hasattr(record, "tags"):
+        record.tags = {}
+    record.tags["service_name"] = resource.attributes["service.name"]
+    record.tags["trace_id"] = format(span.get_span_context().trace_id, "032x")
+LoggingInstrumentor().instrument(log_hook=log_hook)
+```
+
+This is going to add two labels called `service_name` and `trace_id` to all your log records, which you can 
+use to search for all log outputs across services that belong to a specific HTTP call. 
+
+1. Make sure that both services are reloaded and generate some traffic
+1. Open Jaeger UI at http://localhost:16686
+1. Copy the trace id from the URL
+1. Go to Grafana and search for the label `trace_id` with the value you copied 
 
 ### Further Readings and Exercises
 

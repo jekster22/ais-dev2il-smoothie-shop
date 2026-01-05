@@ -9,6 +9,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.sdk.resources import Resource
 
 
@@ -20,6 +21,14 @@ trace.set_tracer_provider(TracerProvider(resource=resource))
 # This is going to export the tracing data to Jaeger
 otlp_exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
+
+# Instrument logging to automatically inject trace context into all log records
+def log_hook(span, record):
+    if not hasattr(record, "tags"):
+        record.tags = {}
+    record.tags["service_name"] = resource.attributes["service.name"]
+    record.tags["trace_id"] = format(span.get_span_context().trace_id, "032x")
+LoggingInstrumentor().instrument(log_hook=log_hook)
 
 app = FastAPI(title="Kitchen Service")
 
