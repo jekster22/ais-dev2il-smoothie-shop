@@ -16,7 +16,7 @@ class SmoothieOrder(BaseModel):
 
 @app.post("/prepare")
 async def prepare_smoothie(order: SmoothieOrder):
-    logger.info(f"Received order to prepare a smoothie with flavor {order.flavor}")
+    logger.info(f"Received order to prepare a smoothie with flavor {order.flavor}", extra={"tags": {"flavor": order.flavor, "num_cooks": str(NUM_COOKS)}})
     try:
         logger.debug(f"Waiting for a cook to become available")
         await asyncio.wait_for(cook_semaphore.acquire(), timeout=2.0)

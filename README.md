@@ -203,9 +203,9 @@ data allows you to filter and query logs more precisely in Grafana/Loki. For exa
 Attach more information, such as the number of cooks and the number of busy cooks in the kitchen service log outputs. 
 Use extra attributes with log messages.
 
-**Example:** Instead of `logger.info(f"Processing order for {flavor}")`, use:
+**Example:** Instead of `logger.info(f"Processing order for {order.flavor}")`, use:
 ```python
-logger.info("Processing order", extra={"flavor": flavor, "num_cooks": NUM_COOKS})
+logger.info("Processing order", extra={"tags": {"flavor": order.flavor, "num_cooks": str(NUM_COOKS)}})
 ```
 
 Then inspect the logs in Grafana/Loki and search for them. You can filter by these attributes using LogQL queries like 
