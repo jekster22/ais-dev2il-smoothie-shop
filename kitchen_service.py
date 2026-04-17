@@ -21,16 +21,13 @@ class SmoothieOrder(BaseModel):
 
 # Endpoint: Receives requests to prepare a smoothie
 @app.post("/prepare")
+logger.info(f"Received order to prepare a smoothie with flavor {order.flavor}")
 async def prepare_smoothie(order: SmoothieOrder):
     try:
         # Try to get a cook (wait max 2 seconds)
         await asyncio.wait_for(cook_semaphore.acquire(), timeout=2.0)
     except asyncio.TimeoutError:
         # All cooks are busy and timeout reached -> reject the order
-	logger.info(f"Received order to prepare a smoothie with flavor {order.flavor}")
-	logger.debug(f"Waiting for a cook to become available")
-	logger.error(f"Can't process the order: {NUM_COOKS} cooks are currently busy. Consider increasing NUM_COOKS.")
-	logger.info(f"Smoothie with flavor {order.flavor} prepared")
         raise HTTPException(status_code=503, detail="All cooks are currently busy")
 
     try:
