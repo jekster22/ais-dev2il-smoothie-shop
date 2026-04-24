@@ -6,7 +6,20 @@ import logging
 from prometheus_fastapi_instrumentator import Instrumentator
 # Custom metric: Count smoothies ordered by flavor
 from prometheus_client import Counter
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.resources import Resource
 
+
+resource = Resource.create({"service.name": "kitchen-service"})
+trace.set_tracer_provider(TracerProvider(resource=resource))
+# This is going to export the tracing data to Jaeger
+otlp_exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 smoothies_ordered = Counter(
     'smoothies_ordered_total',
@@ -17,6 +30,13 @@ smoothies_ordered = Counter(
 logger = logging.getLogger(__name__)
 # Create the FastAPI application
 app = FastAPI(title="Kitchen Service")
+
+# This is going to hook into FastAPI and automatically create traces for all HTTP requests
+# We exclude "receive" and "send" spans because they are not relevant for us and just add noise to the traces
+FastAPIInstrumentor.instrument_app(app, exclude_spans=["receive", "send"])
+# This is going to hook into HTTPX to automatically create traces for all outgoing HTTP requests and to
+# connect traces between services with each other
+HTTPXClientInstrumentor().instrument()
 
 # Initialize Prometheus metrics instrumentation
 Instrumentator().instrument(app).expose(app)
