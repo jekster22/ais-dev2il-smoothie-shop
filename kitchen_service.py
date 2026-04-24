@@ -58,22 +58,35 @@ logger.info(f"Iniatilized {__name__} with {NUM_COOKS} cook(s) available.")
 # Endpoint: Receives requests to prepare a smoothie
 @app.post("/prepare")
 async def prepare_smoothie(order: SmoothieOrder):
+    logger.info(f"Received order to prepare a smoothie with flavor {order.flavor}")
+
+    # Increment the counter for this flavor
     smoothies_ordered.labels(flavor=order.flavor).inc()
 
-    logger.info(f"Preparing smoothie", extra={"tags":{"flavor": order.flavor, "num_cooks":  str(NUM_COOKS)}})
+    # Get a tracer named after this module (same pattern as getLogger(__name__) for loggers).
+    # The name identifies which part of the code created the tracer and will show up
+    # as `otel.library.name` in Jaeger, so you can see which module produced a span.
+    tracer = trace.get_tracer(__name__)
+
+    # Custom span: Waiting for cook to become available
+    with tracer.start_as_current_span("wait_for_cook") as wait_span:
+        wait_span.set_attribute("flavor", order.flavor)
+        wait_span.set_attribute("num_cooks", NUM_COOKS)
+        try:
+            logger.debug(f"Waiting for a cook to become available")
+            await asyncio.wait_for(cook_semaphore.acquire(), timeout=2.0)
+        except asyncio.TimeoutError:
+            logger.error(f"Can't process the order: {NUM_COOKS} cooks are currently busy. Consider increasing NUM_COOKS.")
+            raise HTTPException(status_code=503, detail="All cooks are currently busy")
+
     try:
-        # Try to get a cook (wait max 2 seconds)
-        logger.debug(f"Waiting for a cook to be available")
-        await asyncio.wait_for(cook_semaphore.acquire(), timeout=2.0)
-    except asyncio.TimeoutError:
-        # All cooks are busy and timeout reached -> reject the order
-        logger.error(f"No cook available. {NUM_COOKS} cooks are currently busy. Consider increasing the number of cooks.")
-        raise HTTPException(status_code=503, detail="All cooks are currently busy")
-    try:
-        # Simulate preparing the smoothie (takes 1.5 to 2.5 seconds)
-        await asyncio.sleep(random.uniform(1.5, 2.5))
-        logger.info(f"Finished preparing {order.flavor} smoothie")
+        # Custom span: Preparing the smoothie
+        with tracer.start_as_current_span("prepare_smoothie") as prep_span:
+            prep_span.set_attribute("flavor", order.flavor)
+            preparation_time = random.uniform(1.5, 2.5)
+            await asyncio.sleep(preparation_time)
+            logger.debug(f"Smoothie with flavor {order.flavor} prepared")
+
         return {"status": "done", "flavor": order.flavor}
     finally:
-        # Release the cook so they can prepare the next smoothie
         cook_semaphore.release()
