@@ -13,7 +13,17 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
+# Instrument logging to automatically inject trace context into all log records
+
+def log_hook(span, record):
+    if not hasattr(record, "tags"):
+        record.tags = {}
+    record.tags["service_name"] = resource.attributes["service.name"]
+    record.tags["trace_id"] = format(span.get_span_context().trace_id, "032x")
+
+LoggingInstrumentor().instrument(log_hook=log_hook)
 
 resource = Resource.create({"service.name": "kitchen-service"})
 trace.set_tracer_provider(TracerProvider(resource=resource))
