@@ -18,7 +18,7 @@ from opentelemetry.instrumentation.logging import LoggingInstrumentor
 def log_hook(span, record):
     if not hasattr(record, "tags"):
         record.tags = {}
-    record.tags["service_name"] = resource.attributes["service.name"]
+    record.tags["order-service"] = resource.attributes["order-service"]
     record.tags["trace_id"] = format(span.get_span_context().trace_id, "032x")
 
 LoggingInstrumentor().instrument(log_hook=log_hook)
