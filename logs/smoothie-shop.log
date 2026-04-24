@@ -1,0 +1,18 @@
+[32mINFO[0m:     2026-04-24 10:43:18 - uvicorn.error - Will watch for changes in these directories: ['/home/javid/ais-dev2il-smoothie-shop']
+[32mINFO[0m:     2026-04-24 10:43:18 - uvicorn.error - Uvicorn running on [1mhttp://127.0.0.1:8001[0m (Press CTRL+C to quit)
+[32mINFO[0m:     2026-04-24 10:43:18 - uvicorn.error - Started reloader process [[36m[1m11237[0m] using [36m[1mStatReload[0m
+[32mINFO[0m:     2026-04-24 10:43:19 - kitchen_service - Iniatilized kitchen_service with 1 cook(s) available.
+[32mINFO[0m:     2026-04-24 10:43:19 - uvicorn.error - Started server process [[36m11239[0m]
+[32mINFO[0m:     2026-04-24 10:43:19 - uvicorn.error - Waiting for application startup.
+[32mINFO[0m:     2026-04-24 10:43:19 - uvicorn.error - Application startup complete.
+[32mINFO[0m:     2026-04-24 10:43:27 - uvicorn.access - 127.0.0.1:44246 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:43:37 - uvicorn.access - 127.0.0.1:46906 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:43:47 - uvicorn.access - 127.0.0.1:53404 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:43:58 - uvicorn.access - 127.0.0.1:60828 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:44:08 - uvicorn.access - 127.0.0.1:40538 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:44:18 - uvicorn.access - 127.0.0.1:34082 - "GET /metrics HTTP/1.1" 200
+[32mINFO[0m:     2026-04-24 10:44:25 - uvicorn.error - Shutting down
+[32mINFO[0m:     2026-04-24 10:44:25 - uvicorn.error - Waiting for application shutdown.
+[32mINFO[0m:     2026-04-24 10:44:25 - uvicorn.error - Application shutdown complete.
+[32mINFO[0m:     2026-04-24 10:44:25 - uvicorn.error - Finished server process [[36m11239[0m]
+[32mINFO[0m:     2026-04-24 10:44:25 - uvicorn.error - Stopping reloader process [[36m[1m11237[0m]
